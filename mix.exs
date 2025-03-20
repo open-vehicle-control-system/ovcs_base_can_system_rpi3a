@@ -1,8 +1,8 @@
-defmodule NervesSystemRpi3a.MixProject do
+defmodule OvcsBaseCanSystemRpi3a.MixProject do
   use Mix.Project
 
-  @github_organization "nerves-project"
-  @app :nerves_system_rpi3a
+  @github_organization "open-vehicle-control-system"
+  @app :ovcs_base_can_system_rpi3a
   @source_url "https://github.com/#{@github_organization}/#{@app}"
   @version Path.join(__DIR__, "VERSION")
            |> File.read!()
@@ -77,7 +77,7 @@ defmodule NervesSystemRpi3a.MixProject do
 
   defp description do
     """
-    Nerves System - Raspberry Pi 3 A+ and Zero 2 W
+    OVCS Base Can System - Raspberry Pi 3 A+ and Zero 2 W
     """
   end
 
