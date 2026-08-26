@@ -19,13 +19,11 @@ defmodule OvcsBaseCanSystemRpi3a.MixProject do
       description: description(),
       package: package(),
       deps: deps(),
-      aliases: [loadconfig: [&bootstrap/1]],
-      docs: docs(),
-      preferred_cli_env: %{
-        docs: :docs,
-        "hex.build": :docs,
-        "hex.publish": :docs
-      }
+      aliases: [
+        loadconfig: [&bootstrap/1],
+        generate_fwup_conf: &generate_fwup_conf/1
+      ],
+      docs: docs()
     ]
   end
 
@@ -37,6 +35,10 @@ defmodule OvcsBaseCanSystemRpi3a.MixProject do
     set_target()
     Application.start(:nerves_bootstrap)
     Mix.Task.run("loadconfig", args)
+  end
+
+  def cli do
+    [preferred_envs: %{docs: :docs, "hex.build": :docs, "hex.publish": :docs}]
   end
 
   defp nerves_package do
@@ -68,7 +70,7 @@ defmodule OvcsBaseCanSystemRpi3a.MixProject do
   defp deps do
     [
       {:nerves, "~> 1.11", runtime: false},
-      {:nerves_system_br, "1.29.3", runtime: false},
+      {:nerves_system_br, "1.33.7", runtime: false},
       {:nerves_toolchain_armv7_nerves_linux_gnueabihf, "~> 13.2.0", runtime: false},
       {:nerves_system_linter, "~> 0.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.22", only: :docs, runtime: false}
@@ -109,17 +111,19 @@ defmodule OvcsBaseCanSystemRpi3a.MixProject do
       "fwup_include",
       "rootfs_overlay",
       "CHANGELOG.md",
-      "cmdline.txt",
+      "cmdline-a.txt",
+      "cmdline-b.txt",
       "config.txt",
       "fwup-ops.conf",
+      "fwup.conf.eex",
       "fwup.conf",
       "LICENSES/*",
-      "linux-6.6.defconfig",
+      "linux-6.12.defconfig",
       "mix.exs",
       "nerves_defconfig",
       "post-build.sh",
       "post-createfs.sh",
-      "ramoops.dts",
+      "ramoops-overlay.dts",
       "README.md",
       "REUSE.toml",
       "VERSION"
@@ -144,5 +148,16 @@ defmodule OvcsBaseCanSystemRpi3a.MixProject do
     else
       System.put_env("MIX_TARGET", "target")
     end
+  end
+
+  defp generate_fwup_conf(_args) do
+    template_path = Path.join(__DIR__, "fwup.conf.eex")
+    output_path = Path.join(__DIR__, "fwup.conf")
+
+    Mix.shell().info("Generating fwup.conf")
+
+    content = EEx.eval_file(template_path)
+    File.write!(output_path, content)
+    Mix.shell().info("Successfully generated #{output_path}")
   end
 end

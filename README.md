@@ -7,6 +7,10 @@
 This is the base Nerves System configuration for the Raspberry Pi 3 Model A+
 with the USB port running in gadget mode.
 
+*This is the `main` branch. If you are customizing a `v1.x` system, please see
+the `maint-v1.x` branch. See the "Upgrading to 2.0" section if you are upgrading
+your Nerves system dependency.*
+
 ![Raspberry Pi 3 A+ image](assets/images/rpi_a_plus.png)
 <br><sup>[Image credit](#rpi)</sup>
 
@@ -15,7 +19,7 @@ with the USB port running in gadget mode.
 | CPU                  | 1.4 GHz quad-core ARM Cortex-A53|
 | Memory               | 512 MB DRAM                     |
 | Storage              | MicroSD                         |
-| Linux kernel         | 6.1 w/ Raspberry Pi patches     |
+| Linux kernel         | 6.12 w/ Raspberry Pi patches    |
 | IEx terminal         | UART `ttyAMA0` Can be changed to HDMI |
 | GPIO, I2C, SPI       | Yes - [Elixir Circuits](https://github.com/elixir-circuits) |
 | ADC                  | No                              |
@@ -48,6 +52,33 @@ for more information.
 If you need custom modifications to this system for your device, clone this
 repository and update as described in [Making custom
 systems](https://hexdocs.pm/nerves/customizing-systems.html).
+
+## Upgrading to 2.0
+
+If your application depended on a pre-2.0 version of this Nerves system and you
+are upgrading, you'll need to start validating firmware after it boots the first
+time. If you don't do this, the Nerves MOTD will show that the firmware hasn't
+been validated when you log in. You can manually validate by calling
+`Nerves.Runtime.validate_firmware/0` or running the `fw_validate` helper at the IEx prompt.
+If you don't do this, the device will run the old firmware on the next reboot.
+
+A simple default way of validating the firmware can be enabled using
+Nerves.Runtime's startup guard feature as described in [Assisted firmware
+validation and automatic
+revert](https://hexdocs.pm/nerves_runtime/readme.html#assisted-firmware-validation-and-automatic-revert).
+Please follow the directions there for the needed config file update.
+
+If in doubt, use `mix nerves.new` to create a new project and compare what it
+creates to your project. If you haven't modified the Nerves-specific
+configuration parts of your project much, the firmware validation piece should
+be the main update.
+
+Please also review your use of `Nerves.Runtime.KV` in your application since the
+`nerves_fw_active` key no longer is used. Use `Nerves.Runtime.firmware_slots/0`
+to determine the active firmware slot. The `nerves_fw_active` key wasn't always
+accurate, so it was removed to avoid a misleading answer. The function call is
+reliable and also a generic way to determine slot status on all Nerves
+platforms.
 
 ## Supported WiFi devices
 
@@ -164,3 +195,16 @@ started with the basics like bringing up the virtual Ethernet interface,
 initializing the application partition, and enabling ssh-based firmware updates.
 
 [Image credit](#rpi): This image is from [raspberrypi.org](https://www.raspberrypi.org/products/raspberry-pi-3-model-a-plus/).
+
+## OVCS fork
+
+This is the OVCS fork of `nerves_system_rpi3a`, adding SocketCAN support
+(kernel CAN + MCP251xFD, `can-utils`, `socketcand`, `iproute2`) for use
+in a vehicle. Tracks upstream **v2.0.3** (`nerves_system_br` 1.33.7,
+Erlang/OTP 28.5).
+
+Upstream v2.0.0 changed the MicroSD/eMMC layout to A/B firmware slots
+with automatic rollback, and it is a **one-way** upgrade: a device on the
+older layout must be reflashed, not updated over the air. Firmware built
+against this system must also call `Nerves.Runtime.validate_firmware/0`,
+or every update is reverted on the next boot.
