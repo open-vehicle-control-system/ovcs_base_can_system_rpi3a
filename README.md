@@ -195,3 +195,16 @@ started with the basics like bringing up the virtual Ethernet interface,
 initializing the application partition, and enabling ssh-based firmware updates.
 
 [Image credit](#rpi): This image is from [raspberrypi.org](https://www.raspberrypi.org/products/raspberry-pi-3-model-a-plus/).
+
+## OVCS fork
+
+This is the OVCS fork of `nerves_system_rpi3a`, adding SocketCAN support
+(kernel CAN + MCP251xFD, `can-utils`, `socketcand`, `iproute2`) for use
+in a vehicle. Tracks upstream **v2.0.3** (`nerves_system_br` 1.33.7,
+Erlang/OTP 28.5).
+
+Upstream v2.0.0 changed the MicroSD/eMMC layout to A/B firmware slots
+with automatic rollback, and it is a **one-way** upgrade: a device on the
+older layout must be reflashed, not updated over the air. Firmware built
+against this system must also call `Nerves.Runtime.validate_firmware/0`,
+or every update is reverted on the next boot.
